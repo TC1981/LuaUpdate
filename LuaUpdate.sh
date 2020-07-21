@@ -124,20 +124,6 @@ SendMail() {
 	
 	curl --url 'smtps://smtp.gmail.com:465' --ssl-reqd --mail-from 'nexus@home-net.ml' --mail-rcpt 'csore.tamas@gmail.com' --user 'csore.tamas@gmail.com:,yH"=^2`So*a=9PD' --upload-file mail.txt -s
 }
-
-
-# Checks that the last IP change (and A record update) was made within 2 hours.
-# The script does not check the DNS IP within 2 hours after A record update, because if DNS records has not been updated, there is nothing to do with it.
-DoDNSCheck()
-{
-	local NextDNSUpdate=$(($(date -d "$IPUpdateDateTime" +"%s") + 7200))
-
-	if [ $(date +"%s") -lt "$NextDNSUpdate" ]; then
-		return 0
-	else
-		return 1
-	fi
-}
 # -----------------------------------------------------------------------------------------------
 # End of functions
 # -----------------------------------------------------------------------------------------------
@@ -161,19 +147,6 @@ do
 		UpdateNVRAMLastIP
 		UpdateARecord
 	fi
-	
-	#DoDNSCheck
-	#DNSCheck=$? # If DoDNSCheck returns 1 the DNS IP record check has sense.
-	#
-	#if [ "$DNSCheck" -eq "1" ]; then
-	#	DNS_IP=`nslookup $Domain 8.8.8.8 | grep Address | tail -n 1 | awk '{print $3}'`
-	#	
-	#	if [ $Current_WAN_IP != $DNS_IP ]; then
-	#		# email notification goes here
-	#		WriteToLog DNS
-	#		UpdateARecord
-	#	fi
-	#fi
 done
 ## -----------------------------------------------------------------------------------------------
 ## End of main
