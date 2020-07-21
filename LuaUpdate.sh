@@ -70,6 +70,7 @@ UpdateNVRAMLastIP() {
 	nvram commit
 }
 
+# Checks that the external IP address has changed or not?
 CheckIPChange()
 {
 	CurrentWANIP=`nvram get wan_ipaddr`
@@ -121,6 +122,7 @@ WriteToLog() {
 	fi
 }
 
+# Sending email about events
 SendMail() {
 
 	if [ "$1" == "OK" ]; then
@@ -150,6 +152,8 @@ while sleep $UpdateInterval
 do
 	CheckIPChange
 	local IPChanged=$?
+	
+	
 
 	if [ $IPChanged == "true" ]; then
 		UpdateNVRAMLastIP
