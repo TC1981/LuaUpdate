@@ -73,30 +73,50 @@ UpdateNVRAMLastIP() {
 # Checks that the external IP address has changed or not?
 CheckIPChange()
 {
-	CurrentWANIP=`nvram get wan_ipaddr`
-	PreviousWANIP=`nvram get wan_ipaddr_last`
+	CurrentWANIP=$( nvram get wan_ipaddr )
+	PreviousWANIP=$( nvram get wan_ipaddr_last )
 	local IPChanged="false"
 	
-	if [ $CurrentWANIP != $PreviousWANIP ]; then
+	if [ "$CurrentWANIP" != "$PreviousWANIP" ]; then
 		IPChanged="true"
-		UpdateARecord
 	fi
 	
 	return "$IPChanged"
 }
 
+# Checks the IP validity
+ValidateIP()
+{
+	local IPIsValid="true"
+
+	# 0.0.0.0, 1.1.1.1, etc IPs
+	if $CurrentWANIP | grep -Eq '^\d{1}\.(\d{1}\.){2}\d{1}$'; then
+		IPIsValid="false"
+	
+	# 192.168.x.x
+	elif $CurrentWANIP | grep -Eq '^192\.168\.\d{1,3}\.\d{1,3}$'; then
+		IPIsValid="false"
+
+	# localhost
+	elif $CurrentWANIP | grep -Eq '127.0.0.1'; then
+		IPIsValid="false"
+	fi
+	
+	return $"IPIsValid"
+}
+
 # Updates the domains LuaDNS A record.
 UpdateARecord() {
-	json='{"id":$ARecordID,"name":"$Domain.","type":"A","content":"$CurrentWANIP","ttl":3600,"zone_id":$ZoneID}'
+	local json='{"id":$ARecordID,"name":"$Domain.","type":"A","content":"$CurrentWANIP","ttl":3600,"zone_id":$ZoneID}'
 	local ReturnedID=$(curl -s -u $Email:$Token -H 'Accept: application/json' -X PUT -d '$json' https://api.luadns.com/v1/zones/$ZoneID/records/$ARecordID) | jq '.id'
+
+	local UpdateSuccessfull="false";
 	
 	if [ "$ReturnedID" == "$ARecordID" ]; then
-		WriteToLog IPUpdateSuccess
-		SendMail OK
-	else
-		WriteToLog IPUpdateFailed
-		SendMail
+		UpdateSuccessfull="true"
 	fi
+	
+	return "$UpdateSuccessfull"
 }
 
 # Write event to log file.
@@ -142,23 +162,45 @@ SendMail() {
 # Main
 # -----------------------------------------------------------------------------------------------
 Help $@
-StoreScriptParameters $@
 JQInstalledCheck
+StoreScriptParameters $@
 GetLuaDNSIDs
 
 WriteToLog Start
 
 while sleep $UpdateInterval
 do
-	CheckIPChange
-	local IPChanged=$?
+	HasIPChanged=$( CheckIPChange )
 	
-	
-
-	if [ $IPChanged == "true" ]; then
-		UpdateNVRAMLastIP
-		UpdateARecord
+	# Checks the validity of the new IP.
+	if [ "$HasIPChanged" == "true" ]; then
+		IsIPValid=$( ValidateIP )
 	fi
+	
+	# Only update when the IP was changed and the new IP is valid (not 0.0.0.0 or something like this)
+	if [ "$HasIPChanged" == "true" ] && [ "$IsIPValid" == "true" ]; then
+		UpdateNVRAMLastIP
+		local UpdateWasSuccessfull="false"
+		
+		# Try update A record until it is successfully updated.
+		while [ "$UpdateWasSuccessfull"	!= "true" ] 
+		do
+			UpdateWasSuccessfull=$( UpdateARecord )
+			
+			# Successfull update -> send email, write to log
+			if [ "$UpdateWasSuccessfull" == "true" ]
+				WriteToLog IPUpdateSuccess
+				SendMail OK
+				break
+			
+			# Update failed -> write to log, wait 5 secs
+			else
+				WriteToLog IPUpdateFailed
+				sleep 5
+			fi
+		done
+	fi
+	
 done
 ## -----------------------------------------------------------------------------------------------
 ## End of main
