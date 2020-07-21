@@ -74,7 +74,14 @@ CheckIPChange()
 {
 	CurrentWANIP=`nvram get wan_ipaddr`
 	PreviousWANIP=`nvram get wan_ipaddr_last`
-	#WriteToLog CheckIPChange
+	local IPChanged="false"
+	
+	if [ $CurrentWANIP != $PreviousWANIP ]; then
+		IPChanged="true"
+		UpdateARecord
+	fi
+	
+	return "$IPChanged"
 }
 
 # Updates the domains LuaDNS A record.
@@ -142,8 +149,9 @@ WriteToLog Start
 while sleep $UpdateInterval
 do
 	CheckIPChange
+	local IPChanged=$?
 
-	if [ $CurrentWANIP != $PreviousWANIP ]; then
+	if [ $IPChanged == "true" ]; then
 		UpdateNVRAMLastIP
 		UpdateARecord
 	fi
