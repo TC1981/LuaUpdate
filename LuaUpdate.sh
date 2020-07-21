@@ -81,7 +81,7 @@ CheckIPChange()
 		IPChanged="true"
 	fi
 	
-	return "$IPChanged"
+	echo "$IPChanged"
 }
 
 # Checks the IP validity
@@ -102,7 +102,7 @@ ValidateIP()
 		IPIsValid="false"
 	fi
 	
-	return $"IPIsValid"
+	echo $"IPIsValid"
 }
 
 # Updates the domains LuaDNS A record.
@@ -116,7 +116,7 @@ UpdateARecord() {
 		UpdateSuccessfull="true"
 	fi
 	
-	return "$UpdateSuccessfull"
+	echo "$UpdateSuccessfull"
 }
 
 # Write event to log file.
