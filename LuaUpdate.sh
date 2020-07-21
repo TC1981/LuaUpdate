@@ -46,9 +46,9 @@ JQInstalledCheck()
 # Stores the script's CLI parameters to named variables.
 StoreScriptParameters()
 {
-	Email="$1"
-	Token="$2"
-	Domain="$3"
+	Domain="$1"
+	Email="$2"
+	Token="$3"
 
 	if [ "$#" == "4" ]; then
 		UpdateInterval=$4
@@ -188,7 +188,7 @@ do
 			UpdateWasSuccessfull=$( UpdateARecord )
 			
 			# Successfull update -> send email, write to log
-			if [ "$UpdateWasSuccessfull" == "true" ]
+			if [ "$UpdateWasSuccessfull" == "true" ]; then
 				WriteToLog IPUpdateSuccess
 				SendMail OK
 				break
