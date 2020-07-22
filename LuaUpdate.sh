@@ -132,6 +132,10 @@ WriteToLog() {
 	elif [ "$1" == "IPUpdateFailed" ]; then
 		sed -i "1i $DateTime - Failed A record update on $Domain. A record IP could not be changed from $PreviousWANIP to $CurrentWANIP ." $LogPath$LogFileName
 
+	# IP validity failed
+	elif [ "$1" == "IPIsNotValid" ]; then
+		sed -i "1i $DateTime - The current external IP ($CurrentWANIP) is not valid. DNS A record update skipped." $LogPath$LogFileName
+
 	# log file exist, insert line to log file's first line
 	elif [ "$1" == "Start" ] && [ -f $LogPath$LogFileName ]; then
 		sed -i "1i $DateTime - LuaUpdater started" $LogPath$LogFileName
@@ -175,6 +179,11 @@ do
 	# Checks the validity of the new IP.
 	if [ "$HasIPChanged" == "true" ]; then
 		IsIPValid=$( ValidateIP )
+	fi
+	
+	# Log if the new external IP is not valid.
+	if [ "$IsIPValid" == "false" ]; then
+		WriteToLog IPIsNotValid
 	fi
 	
 	# Only update when the IP was changed and the new IP is valid (not 0.0.0.0 or something like this)
