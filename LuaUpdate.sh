@@ -90,15 +90,15 @@ ValidateIP()
 	local IPIsValid="true"
 
 	# 0.0.0.0, 1.1.1.1, etc IPs
-	if $CurrentWANIP | grep -Eq '^\d{1}\.(\d{1}\.){2}\d{1}$'; then
+	if echo "$CurrentWANIP" | grep -Eq '^\d{1}\.(\d{1}\.){2}\d{1}$'; then
 		IPIsValid="false"
 	
 	# 192.168.x.x
-	elif $CurrentWANIP | grep -Eq '^192\.168\.\d{1,3}\.\d{1,3}$'; then
+	elif echo "$CurrentWANIP" | grep -Eq '^192\.168\.\d{1,3}\.\d{1,3}$'; then
 		IPIsValid="false"
 
 	# localhost
-	elif $CurrentWANIP | grep -Eq '127.0.0.1'; then
+	elif echo "$CurrentWANIP" | grep -Eq '127.0.0.1'; then
 		IPIsValid="false"
 	fi
 	
