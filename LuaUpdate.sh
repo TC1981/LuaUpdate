@@ -73,7 +73,7 @@ UpdateNVRAMLastIP() {
 # Checks that the external IP address has changed or not?
 CheckIPChange()
 {
-	local CurrentWANIP=$( nvram get wan_ipaddr )
+	CurrentWANIP=$( nvram get wan_ipaddr )
 	local DNSIP=$( curl -s -u $Email:$Token -H 'Accept: application/json' https://api.luadns.com/v1/zones/$ZoneID/records/$ArecordID | jq '.content' -r )
 	local IPChanged="false"
 	
