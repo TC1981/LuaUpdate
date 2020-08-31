@@ -64,17 +64,11 @@ GetLuaDNSIDs()
 	ARecordID=$( curl -s -u $Email:$Token -H 'Accept: application/json' https://api.luadns.com/v1/zones/$ZoneID | jq ".records[] | select(.type == \"A\") | .id" )
 }
 
-# If external IP as changed, updates the last IP address stored in router's NVRAM.
-UpdateNVRAMLastIP() {
-	nvram set wan_ipaddr_last=$CurrentWANIP
-	nvram commit
-}
-
 # Checks that the external IP address has changed or not?
 CheckIPChange()
 {
 	CurrentWANIP=$( nvram get wan_ipaddr )
-	local DNSIP=$( curl -s -u $Email:$Token -H 'Accept: application/json' https://api.luadns.com/v1/zones/$ZoneID/records/$ArecordID | jq '.content' -r )
+	DNSIP=$( curl -s -u $Email:$Token -H 'Accept: application/json' https://api.luadns.com/v1/zones/$ZoneID/records/$ArecordID | jq '.content' -r )
 	local IPChanged="false"
 	
 	if [ "$CurrentWANIP" != "$DNSIP" ]; then
@@ -108,15 +102,22 @@ ValidateIP()
 # Updates the domains LuaDNS A record.
 UpdateARecord() {
 	local json='{"id":$ARecordID,"name":"$Domain.","type":"A","content":"$CurrentWANIP","ttl":3600,"zone_id":$ZoneID}'
-	local ReturnedID=$(curl -s -u $Email:$Token -H 'Accept: application/json' -X PUT -d '$json' https://api.luadns.com/v1/zones/$ZoneID/records/$ARecordID) | jq '.id'
-
 	local UpdateSuccessfull="false";
 	
-	if [ "$ReturnedID" == "$ARecordID" ]; then
-		UpdateSuccessfull="true"
-	fi
-	
-	echo "$UpdateSuccessfull"
+	# Try update A record until it is successfully updated.
+	while [ "$UpdateSuccessfull" != "true" ] 
+	do
+		local ReturnedID=$(curl -s -u $Email:$Token -H 'Accept: application/json' -X PUT -d '$json' https://api.luadns.com/v1/zones/$ZoneID/records/$ARecordID) | jq '.id'
+		
+		# Successfull update
+		if [ "$ReturnedID" == "$ARecordID" ]; then
+			WriteToLog IPUpdateSuccess
+		# Update failed -> write to log, wait 5 secs
+		else
+			WriteToLog IPUpdateFailed
+			sleep 5
+		fi
+	done
 }
 
 # Write event to log file.
@@ -127,10 +128,10 @@ WriteToLog() {
 		sed -i "1i $DateTime - $Domain IP does not changed. No update needed." $LogPath$LogFileName
 		
 	elif [ "$1" == "IPUpdateSuccess" ]; then
-		sed -i "1i $DateTime - Successfull A record update on $Domain. A record IP has changed from $PreviousWANIP to $CurrentWANIP ." $LogPath$LogFileName
+		sed -i "1i $DateTime - Successfull A record update on $Domain. A record IP has changed from $DNSIP to $CurrentWANIP ." $LogPath$LogFileName
 	
 	elif [ "$1" == "IPUpdateFailed" ]; then
-		sed -i "1i $DateTime - Failed A record update on $Domain. A record IP could not be changed from $PreviousWANIP to $CurrentWANIP ." $LogPath$LogFileName
+		sed -i "1i $DateTime - Failed A record update on $Domain. A record IP could not be changed from $DNSIP to $CurrentWANIP ." $LogPath$LogFileName
 
 	# IP validity failed
 	elif [ "$1" == "IPIsNotValid" ]; then
@@ -148,13 +149,7 @@ WriteToLog() {
 
 # Sending email about events
 SendMail() {
-
-	if [ "$1" == "OK" ]; then
-		printf "To: csore.tamas@gmail.com\nSubject: IP change notification!\nFrom: nexus@home-net.ml\nContent-Type: text/html; charset=\"utf8\"\n<html><body><H1>IP changed <font color=\"green\">successfully</font> from $PreviousWANIP to $CurrentWANIP!</H1></body></html>" > mail.txt
-	else
-		printf "To: csore.tamas@gmail.com\nSubject: IP change notification!\nFrom: nexus@home-net.ml\nContent-Type: text/html; charset=\"utf8\"\n<html><body><H1>IP change from $PreviousWANIP to $CurrentWANIP <font color=\"red\">failed</font>!</H1></body></html>" > mail.txt
-	fi
-	
+	printf "To: csore.tamas@gmail.com\nSubject: IP change notification!\nFrom: nexus@home-net.ml\nContent-Type: text/html; charset=\"utf8\"\n<html><body><H1>IP changed from $DNSIP to $CurrentWANIP!</H1></body></html>" > mail.txt
 	curl --url 'smtps://smtp.gmail.com:465' --ssl-reqd --mail-from 'nexus@home-net.ml' --mail-rcpt 'csore.tamas@gmail.com' --user 'csore.tamas@gmail.com:,yH"=^2`So*a=9PD' --upload-file mail.txt -s
 }
 # -----------------------------------------------------------------------------------------------
@@ -179,37 +174,16 @@ do
 	# Checks the validity of the new IP.
 	if [ "$HasIPChanged" == "true" ]; then
 		IsIPValid=$( ValidateIP )
-	fi
-	
-	# Log if the new external IP is not valid.
-	if [ "$IsIPValid" == "false" ]; then
-		WriteToLog IPIsNotValid
-	fi
-	
-	# Only update when the IP was changed and the new IP is valid (not 0.0.0.0 or something like this)
-	if [ "$HasIPChanged" == "true" ] && [ "$IsIPValid" == "true" ]; then
-		UpdateNVRAMLastIP
-		local UpdateWasSuccessfull="false"
 		
-		# Try update A record until it is successfully updated.
-		while [ "$UpdateWasSuccessfull"	!= "true" ] 
-		do
-			UpdateWasSuccessfull=$( UpdateARecord )
-			
-			# Successfull update -> send email, write to log
-			if [ "$UpdateWasSuccessfull" == "true" ]; then
-				WriteToLog IPUpdateSuccess
-				SendMail OK
-				break
-			
-			# Update failed -> write to log, wait 5 secs
-			else
-				WriteToLog IPUpdateFailed
-				sleep 5
-			fi
-		done
+		# External IP is valid -> email send, update A record.
+		if [ "$IsIPValid" == "true" ]; then
+			SendMail
+			UpdateARecord # Try update A record until it is successfully updated.
+		# Log if the new external IP is not valid.
+		else
+			WriteToLog IPIsNotValid
+		fi
 	fi
-	
 done
 ## -----------------------------------------------------------------------------------------------
 ## End of main
