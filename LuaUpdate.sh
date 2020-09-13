@@ -46,9 +46,9 @@ JQInstalledCheck()
 # Stores the script's CLI parameters to named variables.
 StoreScriptParameters()
 {
-	Domain="$1"
-	Email="$2"
-	Token="$3"
+	Email="$1"
+	Token="$2"
+	Domain="$3"
 
 	if [ "$#" == "4" ]; then
 		UpdateInterval=$4
