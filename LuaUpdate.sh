@@ -68,14 +68,14 @@ GetLuaDNSIDs()
 CheckIPChange()
 {
 	CurrentWANIP=$( nvram get wan_ipaddr )
-	DNSIP=$( curl -s -u $Email:$Token -H 'Accept: application/json' https://api.luadns.com/v1/zones/$ZoneID/records/$ArecordID | jq '.content' -r )
+	DNSIP=$( curl -s -u $Email:$Token -H 'Accept: application/json' https://api.luadns.com/v1/zones/$ZoneID/records/$ARecordID | jq '.content' -r )
 	local IPChanged="false"
 	
 	if [ "$CurrentWANIP" != "$DNSIP" ]; then
 		IPChanged="true"
 	fi
 	
-	echo "$IPChanged"
+	echo $IPChanged
 }
 
 # Checks the IP validity
@@ -96,7 +96,7 @@ ValidateIP()
 		IPIsValid="false"
 	fi
 	
-	echo $"IPIsValid"
+	echo $IPIsValid
 }
 
 # Updates the domains LuaDNS A record.
