@@ -64,11 +64,16 @@ GetLuaDNSIDs()
 	ARecordID=$( curl -s -u $Email:$Token -H 'Accept: application/json' https://api.luadns.com/v1/zones/$ZoneID | jq ".records[] | select(.type == \"A\") | .id" )
 }
 
-# Checks that the external IP address has changed or not?
-CheckIPChange()
+# Gets router's current IP and the A record IP stored at DNS
+GetIPs()
 {
 	CurrentWANIP=$( nvram get wan_ipaddr )
 	DNSIP=$( curl -s -u $Email:$Token -H 'Accept: application/json' https://api.luadns.com/v1/zones/$ZoneID/records/$ARecordID | jq '.content' -r )
+}
+
+# Checks that the external IP address has changed or not?
+CheckIPChange()
+{
 	local IPChanged="false"
 	
 	if [ "$CurrentWANIP" != "$DNSIP" ]; then
@@ -101,17 +106,18 @@ ValidateIP()
 
 # Updates the domains LuaDNS A record.
 UpdateARecord() {
-	local json='{"id":$ARecordID,"name":"$Domain.","type":"A","content":"$CurrentWANIP","ttl":3600,"zone_id":$ZoneID}'
+	local json="{\"id\":$ARecordID,\"name\":\"$Domain.\",\"type\":\"A\",\"content\":\"$CurrentWANIP\",\"ttl\":300,\"zone_id\":$ZoneID}"
 	local UpdateSuccessfull="false";
 	
 	# Try update A record until it is successfully updated.
 	while [ "$UpdateSuccessfull" != "true" ] 
 	do
-		local ReturnedID=$(curl -s -u $Email:$Token -H 'Accept: application/json' -X PUT -d '$json' https://api.luadns.com/v1/zones/$ZoneID/records/$ARecordID) | jq '.id'
+		local ReturnedID=$(curl -s -u $Email:$Token -H 'Accept: application/json' -X PUT -d $json https://api.luadns.com/v1/zones/$ZoneID/records/$ARecordID | jq '.id')
 		
 		# Successfull update
 		if [ "$ReturnedID" == "$ARecordID" ]; then
 			WriteToLog IPUpdateSuccess
+			UpdateSuccessfull="true";
 		# Update failed -> write to log, wait 5 secs
 		else
 			WriteToLog IPUpdateFailed
@@ -144,6 +150,7 @@ WriteToLog() {
 	# log file does not exist, echo the log
 	elif [ "$1" == "Start" ] && [ ! -f $LogPath$LogFileName ]; then
 		echo "$DateTime - LuaUpdater started" > $LogPath$LogFileName
+		
 	fi
 }
 
@@ -169,6 +176,7 @@ WriteToLog Start
 
 while sleep $UpdateInterval
 do
+	GetIPs
 	HasIPChanged=$( CheckIPChange )
 	
 	# Checks the validity of the new IP.
