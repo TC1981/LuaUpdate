@@ -60,15 +60,15 @@ StoreScriptParameters()
 # Gets the Zone, Zone A record's ID.
 GetLuaDNSIDs()
 {
-	ZoneID=$( curl -s -u $Email:$Token -H 'Accept: application/json' https://api.luadns.com/v1/zones/ | jq ".[] | select(.name == \"$Domain\") | .id" )
-	ARecordID=$( curl -s -u $Email:$Token -H 'Accept: application/json' https://api.luadns.com/v1/zones/$ZoneID | jq ".records[] | select(.type == \"A\") | .id" )
+	ZoneID=$( curl -s -u $Email:$Token -H 'Accept: application/json' https://api.luadns.com/v1/zones/ | jq ".[] | select(.name == \"$Domain\") | .id" & )
+	ARecordID=$( curl -s -u $Email:$Token -H 'Accept: application/json' https://api.luadns.com/v1/zones/$ZoneID | jq ".records[] | select(.type == \"A\") | .id" & )
 }
 
 # Gets router's current IP and the A record IP stored at DNS
 GetIPs()
 {
 	CurrentWANIP=$( nvram get wan_ipaddr )
-	DNSIP=$( curl -s -u $Email:$Token -H 'Accept: application/json' https://api.luadns.com/v1/zones/$ZoneID/records/$ARecordID | jq '.content' -r )
+	DNSIP=$( curl -s -u $Email:$Token -H 'Accept: application/json' https://api.luadns.com/v1/zones/$ZoneID/records/$ARecordID | jq '.content' -r & )
 }
 
 # Checks that the external IP address has changed or not?
@@ -112,7 +112,7 @@ UpdateARecord() {
 	# Try update A record until it is successfully updated.
 	while [ "$UpdateSuccessfull" != "true" ] 
 	do
-		local ReturnedID=$(curl -s -u $Email:$Token -H 'Accept: application/json' -X PUT -d $json https://api.luadns.com/v1/zones/$ZoneID/records/$ARecordID | jq '.id')
+		local ReturnedID=$(curl -s -u $Email:$Token -H 'Accept: application/json' -X PUT -d $json https://api.luadns.com/v1/zones/$ZoneID/records/$ARecordID | jq '.id' & )
 		
 		# Successfull update
 		if [ "$ReturnedID" == "$ARecordID" ]; then
