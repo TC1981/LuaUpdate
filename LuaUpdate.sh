@@ -101,7 +101,7 @@ ValidateIP()
 		IPIsValid="false"
 
 	# empty DNS IP
-	elif echo "$DNSIP" == ""; then
+	elif [ -z "$DNSIP" ]; then
 		IPIsValid="false"
 	fi
 	
@@ -174,11 +174,12 @@ SendMail() {
 Help $@
 JQInstalledCheck
 StoreScriptParameters $@
-GetLuaDNSIDs &&
 
 WriteToLog Start
 
-while sleep $UpdateInterval
+GetLuaDNSIDs &&
+
+while :
 do
 	GetIPs &&
 	HasIPChanged=$( CheckIPChange )
@@ -196,6 +197,7 @@ do
 			WriteToLog IPIsNotValid
 		fi
 	fi
+	sleep $UpdateInterval
 done
 ## -----------------------------------------------------------------------------------------------
 ## End of main
