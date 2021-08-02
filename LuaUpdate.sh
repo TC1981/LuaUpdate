@@ -133,6 +133,12 @@ $DateTime - LuaUpdater started
 	
 	fi
 }
+
+CreateLog() {
+	if [ ! -f $LogPath/$LogFileName ]; then
+		echo "" > $LogPath/$LogFileName
+	fi
+}
 # -----------------------------------------------------------------------------------------------
 # End function declatarions
 # -----------------------------------------------------------------------------------------------
@@ -146,9 +152,11 @@ ARecordID=$(GetDNSIds ARecordID)
 WANIP=$(GetIPs WANIP)
 DNSIP=$(GetIPs DNSIP)
 
+CreateLog
+
 if [ "$WANIP" != "$DNSIP" ]; then
 
-	if [ $( ValidateIP ) == "true"]; then
+	if [ $( ValidateIP ) == "true" ]; then
 		UpdateARecord
 	else
 		WriteToLog IPIsNotValid
