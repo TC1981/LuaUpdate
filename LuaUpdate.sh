@@ -105,26 +105,32 @@ WriteToLog() {
 	local DateTime=$(date +"%F %T")
 	
 	if [ "$1" == "CheckIPChange" ]; then
-		sed -i "1i $DateTime - $Domain IP does not changed. No update needed." $LogPath$LogFileName
+		sed -i '' "1i\\
+$DateTime - $Domain IP does not changed. No update needed.
+" $LogPath/$LogFileName
 		
 	elif [ "$1" == "IPUpdateSuccess" ]; then
-		sed -i "1i $DateTime - Successfull A record update on $Domain. A record IP has changed from $DNSIP to $WANIP ." $LogPath$LogFileName
+		sed -i '' "1i\\
+$DateTime - Successfull A record update on $Domain. A record IP has changed from $DNSIP to $WANIP
+" $LogPath/$LogFileName
 	
 	elif [ "$1" == "IPUpdateFailed" ]; then
-		sed -i "1i $DateTime - Failed A record update on $Domain. A record IP could not be changed from $DNSIP to $WANIP ." $LogPath$LogFileName
+		sed -i '' "1i\\
+$DateTime - Failed A record update on $Domain. A record IP could not be changed from $DNSIP to $WANIP
+" $LogPath/$LogFileName
 
 	# IP validity failed
 	elif [ "$1" == "IPIsNotValid" ]; then
-		sed -i "1i $DateTime - The current external IP ($WANIP) is not valid. DNS A record update skipped." $LogPath$LogFileName
+		sed -i '' "1i\\
+$DateTime - The current external IP ($WANIP) is not valid. DNS A record update skipped
+" $LogPath/$LogFileName
 
 	# log file exist, insert line to log file's first line
-	elif [ "$1" == "Start" ] && [ -f $LogPath$LogFileName ]; then
-		sed -i "1i $DateTime - LuaUpdater started" $LogPath$LogFileName
+	elif [ "$1" == "Start" ]; then
+		sed -i '' "1i\\
+$DateTime - LuaUpdater started
+" $LogPath/$LogFileName
 	
-	# log file does not exist, echo the log
-	elif [ "$1" == "Start" ] && [ ! -f $LogPath$LogFileName ]; then
-		echo "$DateTime - LuaUpdater started" > $LogPath$LogFileName
-		
 	fi
 }
 # -----------------------------------------------------------------------------------------------
