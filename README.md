@@ -19,3 +19,7 @@ Shell script to check WAN interface IP change and if the IP has been changed the
     ```bash
     $ configctl luaupdate start
     ```
+5. Add cronjob on UI (runs every 3 minutes)
+    ```bash
+    0/3	*	*	*	*
+    ```
