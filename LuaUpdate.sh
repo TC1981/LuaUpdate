@@ -1,6 +1,7 @@
 #!/bin/sh
 
 # Variable declatarions / initializations
+TmpPath="/tmp"
 LogPath="/var/log"
 LogFileName="LuaUpdate.log"
 Email="tcvf1@protonmail.com"
@@ -97,48 +98,40 @@ UpdateARecord() {
 			tryCount=$((tryCount+1))
 			sleep 5
 		fi
+			
 	done
 }
 
 # Write event to log file.
 WriteToLog() {
 	local DateTime=$(date +"%F %T")
+
+	if [ "$1" == "NoIPChange" ]; then
+		echo "$DateTime - $Domain IP does not changed. No update needed." > $TmpPath/_$LogFileName
 	
-	if [ "$1" == "CheckIPChange" ]; then
-		sed -i '' "1i\\
-$DateTime - $Domain IP does not changed. No update needed.
-" $LogPath/$LogFileName
-		
 	elif [ "$1" == "IPUpdateSuccess" ]; then
-		sed -i '' "1i\\
-$DateTime - Successfull A record update on $Domain. A record IP has changed from $DNSIP to $WANIP
-" $LogPath/$LogFileName
+		echo "$DateTime - Successfull A record update on $Domain. A record IP has changed from $DNSIP to $WANIP" > $TmpPath/_$LogFileName
 	
 	elif [ "$1" == "IPUpdateFailed" ]; then
-		sed -i '' "1i\\
-$DateTime - Failed A record update on $Domain. A record IP could not be changed from $DNSIP to $WANIP
-" $LogPath/$LogFileName
+		echo "$DateTime - Failed A record update on $Domain. A record IP could not be changed from $DNSIP to $WANIP" > $TmpPath/_$LogFileName
 
 	# IP validity failed
 	elif [ "$1" == "IPIsNotValid" ]; then
-		sed -i '' "1i\\
-$DateTime - The current external IP ($WANIP) is not valid. DNS A record update skipped
-" $LogPath/$LogFileName
+		echo "$DateTime - The current external IP ($WANIP) is not valid. DNS A record update skipped" > $TmpPath/_$LogFileName
 
 	# log file exist, insert line to log file's first line
 	elif [ "$1" == "Start" ]; then
-		sed -i '' "1i\\
-$DateTime - LuaUpdater started
-" $LogPath/$LogFileName
+		echo "$DateTime - LuaUpdater started" > $TmpPath/_$LogFileName
 	
 	fi
+	
+	if [ -f $LogPath/$LogFileName ]; then
+		cat $LogPath/$LogFileName >> $TmpPath/_$LogFileName
+	fi
+	
+	mv -f $TmpPath/_$LogFileName $LogPath/$LogFileName
 }
 
-CreateLog() {
-	if [ ! -f $LogPath/$LogFileName ]; then
-		echo "" > $LogPath/$LogFileName
-	fi
-}
 # -----------------------------------------------------------------------------------------------
 # End function declatarions
 # -----------------------------------------------------------------------------------------------
@@ -152,8 +145,6 @@ ARecordID=$(GetDNSIds ARecordID)
 WANIP=$(GetIPs WANIP)
 DNSIP=$(GetIPs DNSIP)
 
-CreateLog
-
 if [ "$WANIP" != "$DNSIP" ]; then
 
 	if [ $( ValidateIP ) == "true" ]; then
@@ -161,6 +152,9 @@ if [ "$WANIP" != "$DNSIP" ]; then
 	else
 		WriteToLog IPIsNotValid
 	fi
+
+else
+	WriteToLog NoIPChange
 
 fi
 # -----------------------------------------------------------------------------------------------
