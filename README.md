@@ -1,22 +1,21 @@
 # LuaUpdate for OPNsense
 
-Shell cript to check WAN interface IP change and if the IP has been changed then update the DNS A record.
+Shell script to check WAN interface IP change and if the IP has been changed then update the DNS A record.
 
 ## Installation steps:
- 1. Add cron job to OPNsense GUI
+1. Add cron job to OPNsense GUI
     ```bash
-    cp actions_luaupdate.conf /usr/local/opnsense/service/conf/actions.d/
+    $ cp actions_luaupdate.conf /usr/local/opnsense/service/conf/actions.d/
     ```
- 2. Test cron job
+2. Add script to /usr/home
     ```bash
-    configctl luaupdate start
+    $ cp luaupdate.sh /usr/home
     ```
- 3. Add script to /usr/home
+4. Restart configd
     ```bash
-    cp luaupdate.sh /usr/home
+    $ service configd restart
     ```
-    or if copy not permitted due to some misterious write protection reason then
+5. Test cron job
     ```bash
-    nano /usr/home/luaupdate.sh
+    $ configctl luaupdate start
     ```
-
