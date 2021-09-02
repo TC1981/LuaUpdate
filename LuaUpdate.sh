@@ -115,10 +115,6 @@ WriteToLog() {
 	# IP validity failed
 	elif [ "$1" == "IPIsNotValid" ]; then
 		echo "$DateTime - The current external IP ($WANIP) is not valid. DNS A record update skipped" > $TmpPath/_$LogFileName
-
-	# log file exist, insert line to log file's first line
-	elif [ "$1" == "Start" ]; then
-		echo "$DateTime - LuaUpdater started" > $TmpPath/_$LogFileName
 	
 	fi
 	
