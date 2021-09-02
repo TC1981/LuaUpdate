@@ -112,6 +112,9 @@ WriteToLog() {
 	elif [ "$1" == "IPUpdateFailed" ]; then
 		echo "$DateTime - Failed A record update on $Domain. A record IP could not be changed from $DNSIP to $WANIP" > $TmpPath/_$LogFileName
 
+	elif [ "$1" == "NoDNSIP" ]; then
+		echo "$DateTime - Failed to get $Domain DNS A record value (DNS IP is missing). Execution stopped." > $TmpPath/_$LogFileName
+
 	# IP validity failed
 	elif [ "$1" == "IPIsNotValid" ]; then
 		echo "$DateTime - The current external IP ($WANIP) is not valid. DNS A record update skipped" > $TmpPath/_$LogFileName
@@ -138,7 +141,10 @@ ARecordID=$(GetDNSIds ARecordID)
 WANIP=$(GetIPs WANIP)
 DNSIP=$(GetIPs DNSIP)
 
-if [ "$WANIP" != "$DNSIP" ]; then
+if [ "$DNSIP" == "" ]; then
+	WriteToLog NoDNSIP
+
+elif [ "$WANIP" != "$DNSIP" ]; then
 
 	if [ $( ValidateIP ) == "true" ]; then
 		UpdateARecord
