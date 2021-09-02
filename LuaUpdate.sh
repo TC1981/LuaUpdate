@@ -57,9 +57,6 @@ ValidateIP()
 	elif echo "$WANIP" | grep -Eq '127(\.\d{1,3}){3}$'; then
 		ipIsValid="false"
 
-	# empty DNS IP
-	elif [ -z "$DNSIP" ]; then
-		ipIsValid="false"
 	fi
 
 	echo $ipIsValid
