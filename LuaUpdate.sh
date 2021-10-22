@@ -150,8 +150,8 @@ elif [ $( ValidateIP ) != "true" ]; then
 elif [ "$WANIP" != "$DNSIP" ]; then
 	UpdateARecord
 
-else
-	WriteToLog NoIPChange
+#else
+#	WriteToLog NoIPChange
 
 fi
 # -----------------------------------------------------------------------------------------------
