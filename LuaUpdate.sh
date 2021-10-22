@@ -78,25 +78,17 @@ CheckIPChange()
 UpdateARecord() {
 	local json="{\"id\":$ARecordID,\"name\":\"$Domain.\",\"type\":\"A\",\"content\":\"$WANIP\",\"ttl\":300,\"zone_id\":$ZoneID}"
 	local UpdateSuccessfull="false"
-	local tryCount=0
 
-	# Try update A record for 10 times.
-	while [ "$UpdateSuccessfull" != "true" ] && [ $tryCount -lt 10 ]
-	do
-		local ReturnedID=$(curl -s -u $Email:$Token -H 'Accept: application/json' -X PUT -d $json https://api.luadns.com/v1/zones/$ZoneID/records/$ARecordID | jq '.id' )
+	local ReturnedID=$(curl -s -u $Email:$Token -H 'Accept: application/json' -X PUT -d $json https://api.luadns.com/v1/zones/$ZoneID/records/$ARecordID | jq '.id' )
 
-		# Successfull update
-		if [ "$ReturnedID" == "$ARecordID" ]; then
-			WriteToLog IPUpdateSuccess
-			UpdateSuccessfull="true";
-		# Update failed -> wait 5 secs
-		else
-			WriteToLog IPUpdateFailed
-			tryCount=$((tryCount+1))
-			sleep 5
-		fi
-			
-	done
+	# Successfull update
+	if [ "$ReturnedID" == "$ARecordID" ]; then
+		WriteToLog IPUpdateSuccess
+		UpdateSuccessfull="true";
+	# Update failed
+	else
+		WriteToLog IPUpdateFailed
+	fi
 }
 
 # Write event to log file.
