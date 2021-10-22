@@ -115,6 +115,9 @@ WriteToLog() {
 	elif [ "$1" == "NoDNSIP" ]; then
 		echo "$DateTime - Failed to get $Domain DNS A record value (DNS IP is missing). Execution stopped." > $TmpPath/_$LogFileName
 
+	elif [ "$1" == "NoWANIP" ]; then
+		echo "$DateTime - Failed to get WAN IP. Execution stopped." > $TmpPath/_$LogFileName
+
 	# IP validity failed
 	elif [ "$1" == "IPIsNotValid" ]; then
 		echo "$DateTime - The current external IP ($WANIP) is not valid. DNS A record update skipped." > $TmpPath/_$LogFileName
