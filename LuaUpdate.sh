@@ -147,6 +147,9 @@ DNSIP=$(GetIPs DNSIP)
 if [ "$DNSIP" == "" ]; then
 	WriteToLog NoDNSIP
 
+elif [ "$WANIP" == "" ]
+	WriteToLog WANIP
+
 elif [ $( ValidateIP ) != "true" ]; then
 	WriteToLog IPIsNotValid
 
