@@ -121,6 +121,12 @@ CheckInternetConnection() {
 # Main
 # -----------------------------------------------------------------------------------------------
 
+# Check internet connection is available
+if [ $( CheckInternetConnection ) == 0]; then
+	WriteToLog "No internet connection. Execution stopped."
+	exit 100
+fi
+
 ZoneID=$(GetDNSIds ZoneID)
 ARecordID=$(GetDNSIds ARecordID)
 WANIP=$(GetIPs WANIP)
