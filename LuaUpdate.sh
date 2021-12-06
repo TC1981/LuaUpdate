@@ -41,23 +41,27 @@ GetIPs()
 # Checks the IP validity
 ValidateIP()
 {
-	local ipIsValid="true"
+	local ipIsValid=""
 
 	# 10.x.x.x
-	if echo "$WANIP" | grep -Eq '^10(\.\d{1,3}){3}$'; then
+	if echo "$WANIP" | grep -Eq '^10\.((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){3}$'; then
 		ipIsValid="false"
 
 	# 172.16.x.x -> 172.31.x.x
-	elif echo "$WANIP" | grep -Eq '^172\.(16|17|18|19|21|22|23|24|25|26|27|28|29|30|31|32)(\.\d{1-3}){2}$'; then
+	elif echo "$WANIP" | grep -Eq '^172\.(1[6-9]|2[0-9]]|3[0-2])\.(((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$))){2}$'; then
 		ipIsValid="false"
 
 	# 192.168.x.x
-	elif echo "$WANIP" | grep -Eq '^192\.168(\.\d{1,3}){2}$'; then
+	elif echo "$WANIP" | grep -Eq '^192\.168\.(((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$))){2}$'; then
 		ipIsValid="false"
 
 	# localhost
-	elif echo "$WANIP" | grep -Eq '127(\.\d{1,3}){3}$'; then
+	elif echo "$WANIP" | grep -Eq '^127\.(((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$))){3}$'; then
 		ipIsValid="false"
+
+	# public IP addresses
+	elif echo "$WANIP" | grep -Eq '^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4}$'; then
+		ipIsValid="true"
 
 	fi
 
