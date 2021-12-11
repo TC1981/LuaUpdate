@@ -1,3 +1,3 @@
-# LuaUpdate
+# LuaDNS Updater Script
 
-Linux script to check router's IP change and if the IP has been changed then update the DNS A record.
+Shell script that can be called from Cron and compares WAN interface IP and the LuaDNS A record IP for a given domain.
