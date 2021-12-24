@@ -229,9 +229,9 @@ if [ "$WANIP" != "$DNSIP" ]; then
   if [ "$MESSAGE" != "OK" ]; then
     WriteToLog "Failed to update ${DOMAIN} A record value. Response from LuaDNS: ${MESSAGE}. Execution stopped." "ERROR"
     exit $?
+  else
+    WriteToLog "DNS A record for ${DOMAIN} successfully updated! DNS A record value has been changed from ${DNSIP} to ${WANIP}." "INFO"
   fi
-
-  WriteToLog "DNS A record for ${DOMAIN} successfully updated! DNS A record value has been changed from ${DNSIP} to ${WANIP}." "INFO"
 fi
 
 # -------------------------------------------------------------------------------
