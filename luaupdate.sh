@@ -19,7 +19,7 @@ LOGPATH="/var/log"
 LOGFILENAME="luaupdate.log"
 EMAIL="tcvf1@protonmail.com"
 TOKEN="e46dad5ec97aa1b29f125916d9375688"
-DOMAINNAME="homenetwork.hu"
+DOMAIN="homenetwork.hu"
 WANINTERFACE="pppoe1"
 
 # -------------------------------------------------------------------------------
@@ -81,7 +81,7 @@ UpdateARecord() {
   local ZONEID="$4"
   local ARECORDID="$5"
   local WANIP="$6"
-  local JSON="{\"id\":$ARECORDID,\"name\":\"$DOMAINNAME.\",\"type\":\"A\",\"content\":\"$WANIP\",\"ttl\":300,\"zone_id\":$ZONEID}"
+  local JSON="{\"id\":$ARECORDID,\"name\":\"$DOMAIN.\",\"type\":\"A\",\"content\":\"$WANIP\",\"ttl\":300,\"zone_id\":$ZONEID}"
 
 	echo "$(curl -s -u $EMAIL:$TOKEN -H 'Accept: application/json' -X PUT -d $JSON https://api.luadns.com/v1/zones/$ZONEID/records/$ARecordID)"
 }
@@ -179,7 +179,7 @@ if [ "$MESSAGE" != "OK" ]; then
   exit $?
 fi
 # Getting ZoneID of specified domain
-ZONEID="$(GetZoneId $ZONES $DOMAINNAME)"
+ZONEID="$(GetZoneId $ZONES $DOMAIN)"
 
 
 
@@ -218,20 +218,20 @@ if [ "$WANIP" != "$DNSIP" ]; then
   ARECORDID="$(GetARecordId "$ZONERECORDS")"
   
 	# Send update request and save LuaDNS response
-  UPDATERRESPONSE="$(UpdateARecord "$EMAIL" "$TOKEN" "$DOMAINNAME" "$ZONEID" "$ARECORDID" "$WANIP")"
+  UPDATERRESPONSE="$(UpdateARecord "$EMAIL" "$TOKEN" "$DOMAIN" "$ZONEID" "$ARECORDID" "$WANIP")"
   if ! ValidateJson "$UPDATERRESPONSE" ; then
-		WriteToLog "Failed to update ${DOMAINNAME} A record value for an unknown reason. Execution stopped." "ERROR"
+		WriteToLog "Failed to update ${DOMAIN} A record value for an unknown reason. Execution stopped." "ERROR"
   exit $?
   fi
 
   # Validate update response from LuaDNS
   MESSAGE="$(GetStatusMessage "$UPDATERRESPONSE")"
   if [ "$MESSAGE" != "OK" ]; then
-    WriteToLog "Failed to update ${DOMAINNAME} A record value. Response from LuaDNS: ${MESSAGE}. Execution stopped." "ERROR"
+    WriteToLog "Failed to update ${DOMAIN} A record value. Response from LuaDNS: ${MESSAGE}. Execution stopped." "ERROR"
     exit $?
   fi
 
-  WriteToLog "DNS A record for ${DOMAINNAME} successfully updated! DNS A record value has been changed from ${DNSIP} to ${WANIP}." "INFO"
+  WriteToLog "DNS A record for ${DOMAIN} successfully updated! DNS A record value has been changed from ${DNSIP} to ${WANIP}." "INFO"
 fi
 
 # -------------------------------------------------------------------------------
